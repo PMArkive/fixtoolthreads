@@ -165,7 +165,7 @@ void ThreadSetDefault()
 	g_ThreadHandles  = new HANDLE[numthreads];
 
 #ifdef VRAD
-	s_DispTested     = new DispTested_t[numthreads]();
+	s_DispTested     = new DispTested_t[numthreads + 1]();
 	for (int i = 0; i < _ARRAYSIZE(g_pDispTestedRefs); i++)
 		PatchMemory<DispTested_t*>(g_pDispTestedRefs[i] + 3, s_DispTested);
 #endif
