@@ -98,13 +98,13 @@ void UpdatePacifier(float flPercent)
 		{
 			if (!(i % 4))
 			{
-				printf("%d", i / 4);
+				Log("%d", i / 4);
 			}
 			else
 			{
 				if (i != 40)
 				{
-					printf(".");
+					Log(".");
 				}
 			}
 		}
@@ -114,7 +114,7 @@ void UpdatePacifier(float flPercent)
 
 void StartPacifier(char const* pPrefix)
 {
-	printf("%s", pPrefix);
+	Log("%s", pPrefix);
 	g_LastPacifierDrawn = -1;
 	UpdatePacifier(0.001f);
 }
@@ -123,7 +123,7 @@ void EndPacifier(bool bCarriageReturn)
 {
 	UpdatePacifier(1);
 	if (bCarriageReturn)
-		printf("\n");
+		Log("\n");
 }
 
 typedef void (*ThreadWorkerFn)(int iThread, int iWorkItem);
@@ -188,21 +188,21 @@ void ThreadSetDefault()
 		PatchMemory(g_pDispTestedRefs[i] + 3, &s_DispTested, sizeof(s_DispTested));
 #endif
 
-	printf("%i threads\n", numthreads);
+	Log("%i threads\n", numthreads);
 }
 
 void ThreadLock()
 {
 	EnterCriticalSection(&crit);
 	if (crit_enter)
-		printf("Recursive ThreadLock\n");
+		Log("Recursive ThreadLock\n");
 	crit_enter = 1;
 }
 
 void ThreadUnlock()
 {
 	if (!crit_enter)
-		printf("ThreadUnlock without lock\n");
+		Log("ThreadUnlock without lock\n");
 	crit_enter = 0;
 	LeaveCriticalSection(&crit);
 }
@@ -306,7 +306,7 @@ void RunThreadsOn(int workcnt, bool showpacifier, RunThreadsFn fn, void *pUserDa
 	if (pacifier)
 	{
 		EndPacifier(false);
-		printf (" (%i)\n", end-start);
+		Log(" (%i)\n", end-start);
 	}
 }
 
@@ -363,7 +363,7 @@ bool PatchDispTests(const segment_t& segment)
 	g_pDispTestedRefs[0] = (char*)FindSignature(segment, SIG(\x8D\x3C\xFD\x38\x5C\x1D\x11, xxx????));
 	if (!g_pDispTestedRefs[0])
 	{
-		printf(APP_PREFIX "ERROR: Failed to locate DispTested array\n");
+		Log(APP_PREFIX "ERROR: Failed to locate DispTested array\n");
 		return false;
 	}
 
@@ -386,7 +386,7 @@ bool PatchDispTests(const segment_t& segment)
 		void* disptestedref = FindSignature(segment, sig);
 		if (!disptestedref)
 		{
-			printf(APP_PREFIX "ERROR: Failed to locate DispTested array\n");
+			Log(APP_PREFIX "ERROR: Failed to locate DispTested array\n");
 			return false;
 		}
 		g_pDispTestedRefs[i] = (char*)disptestedref;
@@ -401,7 +401,7 @@ bool PatchMakeScales(const segment_t& segment)
 	char* addr = (char*)FindSignature(segment, SIG(\x8B\x8E\xF8\x00\x00\x00\x01, xxxxxxx));
 	if (!addr)
 	{
-		printf(APP_PREFIX "ERROR: Failed to locate total_transfers add\n");
+		Log(APP_PREFIX "ERROR: Failed to locate total_transfers add\n");
 		// this isn't crucial
 		return true;
 	}
@@ -427,7 +427,7 @@ bool PatchMakeScales(const segment_t& segment)
 
 void ApplyThreadPatches(HMODULE module)
 {
-	printf(APP_PREFIX "(%s) Applying patches...\n", __DATE__);
+	Log(APP_PREFIX "(%s) Applying patches...\n", __DATE__);
 
 	segment_t text_segment;
 	GetModuleSegment(module, ".text", text_segment);
@@ -439,21 +439,21 @@ void ApplyThreadPatches(HMODULE module)
 		detour.func = FindSignature(text_segment, detour.sig);
 		if (!detour.func)
 		{
-			printf(APP_PREFIX "ERROR: Failed to locate function %s\n", pair.first.c_str());
+			Log(APP_PREFIX "ERROR: Failed to locate function %s\n", pair.first.c_str());
 			fail = true;
 		}
 	}
 
 	if (fail)
 	{
-		printf(APP_PREFIX "ERROR: One or more functions failed, unloading patch...\n");
+		Log(APP_PREFIX "ERROR: One or more functions failed, unloading patch...\n");
 		return;
 	}
 
 	g_pNumThreads = *(int**)((unsigned char*)(g_Detours["RunThreadsOnIndividual"].func) + 0x8);
 	if (*g_pNumThreads != -1)
 	{
-		printf(APP_PREFIX "ERROR: Failed to locate numthreads variable, unloading patch...\n");
+		Log(APP_PREFIX "ERROR: Failed to locate numthreads variable, unloading patch...\n");
 		return;
 	}
 
@@ -475,5 +475,5 @@ void ApplyThreadPatches(HMODULE module)
 
 	DetourTransactionCommit();
 
-	printf(APP_PREFIX "Thread patch applied successfully\n");
+	Log(APP_PREFIX "Thread patch applied successfully\n");
 }

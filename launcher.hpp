@@ -1,6 +1,10 @@
 #include <Windows.h>
+#include <stdio.h>
 
 #define APP_PREFIX "[FixToolThreads] "
+
+typedef int (*LogFunc)(const char* format, ...);
+LogFunc Log = printf;
 
 char* GetLastErrorString()
 {
@@ -33,6 +37,13 @@ bool CreateCmdLine(int argc, char* argv[])
 	HMODULE tier0 = LoadLibrary("tier0.dll");
 	if (!tier0)
 		return false;
+
+	void* log = GetProcAddress(tier0, "Msg");
+	if (log)
+		Log = (LogFunc)log;
+	else
+		Log("Warning: Unable to find logging function in tier0\n");
+
 	typedef ICommandLine* (*CommandLine_Tier0)();
 	CommandLine_Tier0 cmdline = (CommandLine_Tier0)GetProcAddress(tier0, "CommandLine_Tier0");
 	if (!cmdline)
